@@ -77,8 +77,17 @@
   <div class="pay">
     <div class="qr" id="qr"></div>
     <div>
-      <div style="font-weight:700;margin-bottom:6px">Pay with Bitcoin</div>
-      <div class="addr-row"><span class="addr" id="addr">bc1qrn9lcjg8z7ytyxhqqrpadp7qxe4tyettxjy7a0</span></div>
+      <div style="font-weight:700;margin-bottom:8px">Choose a payment method</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button id="tabBtc" style="background:var(--brand);color:#1a1207">₿ Bitcoin</button>
+        <button id="tabEth" class="ghost" style="color:var(--muted)">Ξ Ethereum</button>
+      </div>
+      <div id="btcPane">
+        <div class="addr-row"><span class="addr" id="addr">bc1qrn9lcjg8z7ytyxhqqrpadp7qxe4tyettxjy7a0</span></div>
+      </div>
+      <div id="ethPane" style="display:none">
+        <div class="addr-row"><span class="addr" id="ethAddr">0x6DC71aBB084f6272c34Cc37d59f5bF79826aB24d</span></div>
+      </div>
       <button id="copyBtn" class="ghost">Copy address</button>
       <div class="status"><span class="dot" id="dot"></span><span id="statusText">Waiting for payment…</span></div>
     </div>
@@ -92,9 +101,9 @@
   <details>
     <summary>How does the payment check work?</summary>
     <ul>
-      <li>Your browser watches the address above on the public Bitcoin blockchain (mempool.space API).</li>
-      <li>Once a transaction sends ≥ the shown BTC amount to this address and is seen in the mempool (or confirmed), the download unlocks automatically.</li>
-      <li>No account, no email, no card. Pure peer-to-peer.</li>
+      <li>Your browser watches the address on the public Bitcoin <em>and</em> Ethereum blockchains (mempool.space + publicnode RPC).</li>
+      <li>Once a transaction sends ≥ the shown amount to either address and is seen on-chain, the download unlocks automatically.</li>
+      <li>No account, no email, no card. Pure peer-to-peer. Pay in whatever you hold.</li>
     </ul>
   </details>
 
@@ -105,21 +114,17 @@
 </div>
 
 <script>
-const ADDRESS = "bc1qrn9lcjg8z7ytyxhqqrpadp7qxe4tyettxjy7a0";
-const USD_TARGET = 5.00;      // headline price (any >= $1 unlocks)
-const USD_MIN = 1.00;         // minimum to unlock download
-let btcTarget = null;
+const BTC = "bc1qrn9lcjg8z7ytyxhqqrpadp7qxe4tyettxjy7a0";
+const ETH = "0x6DC71aBB084f6272c34Cc37d59f5bF79826aB24d";
+const USD_TARGET = 5.00;   // headline price (pay-what-you-want)
+const USD_MIN = 1.00;      // minimum to unlock download
+let active = 'btc';
+let btcTarget = null, ethTarget = null;
 
-// --- QR code (no external dep): build a tiny QR using an inline encoder is heavy;
-//     instead embed a precomputed QR image via api as svg is not allowed; use a
-//     compact JS QR generator loaded from a trusted CDN fallback. We implement a
-//     minimal QR by fetching an SVG from a deterministic service is discouraged;
-//     so we draw using the qrcode generator below (bundled minimal implementation).
 function buildQR(text){
-  // Use the lightweight qrcode generator bundled inline (qrcode-generator UMD).
+  if(!window.qrcode) return;
   const qr = qrcode(0, 'M');
-  qr.addData(text);
-  qr.make();
+  qr.addData(text); qr.make();
   document.getElementById('qr').innerHTML = qr.createSvgTag({cellSize:4, margin:0, scalable:true});
 }
 
@@ -127,79 +132,103 @@ async function refreshPrice(){
   try{
     const r = await fetch('https://mempool.space/api/v1/prices');
     const j = await r.json();
-    const usdPerBtc = j.USD; // mempool.space returns {USD, EUR, ...}
+    const usdPerBtc = j.USD;
     if(usdPerBtc){
-      btcTarget = (USD_TARGET / usdPerBtc);
-      const minBtc = (USD_MIN / usdPerBtc);
-      document.getElementById('btc').textContent = btcTarget.toFixed(6) + ' BTC';
-      window.__minBtc = minBtc;
-    } else { throw new Error('no USD'); }
+      btcTarget = USD_TARGET/usdPerBtc;
+      ethTarget = USD_TARGET/ await getEthPriceUsd(); // ETH price via coingecko (no key)
+      window.__minBtc = USD_MIN/usdPerBtc;
+      document.getElementById('btc').textContent = btcTarget.toFixed(6)+' BTC';
+    } else throw new Error('no USD');
   }catch(e){
     document.getElementById('btc').textContent = '≈ 0.000050 BTC';
     window.__minBtc = 0.000010;
   }
 }
 
-async function checkPayment(){
-  if(!btcTarget && !window.__minBtc) return;
+async function getEthPriceUsd(){
   try{
-    const r = await fetch('https://mempool.space/api/address/'+ADDRESS+'/txs');
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+    const j = await r.json();
+    return j.ethereum.usd || 3000;
+  }catch(e){ return 3000; }
+}
+
+async function checkBtc(){
+  try{
+    const r = await fetch('https://mempool.space/api/address/'+BTC+'/txs');
     const txs = await r.json();
-    if(!Array.isArray(txs) || txs.length===0){
-      setStatus(false, 'Watching the blockchain for your payment…');
-      return;
-    }
-    let received = 0, bestTx=null;
-    for(const tx of txs){
-      for(const v of (tx.vout||[])){
-        if(v.scriptpubkey_address === ADDRESS && v.value){
-          received += v.value; // satoshis
-        }
-      }
-    }
-    const receivedBtc = received / 1e8;
+    if(!Array.isArray(txs)||txs.length===0){ if(active==='btc') setStatus(false,'Watching the Bitcoin chain…'); return; }
+    let received=0;
+    for(const tx of txs) for(const v of (tx.vout||[])) if(v.scriptpubkey_address===BTC && v.value) received+=v.value;
     const min = window.__minBtc || (USD_MIN/60000);
-    if(receivedBtc >= min){
-      setStatus(true, 'Payment received ✅  Unlocking your download…');
-      unlock();
-    } else {
-      setStatus(false, 'Transaction seen, amount below minimum — top it up?');
-    }
-  }catch(e){
-    setStatus(false, 'Reconnecting to blockchain…');
-  }
+    if(received/1e8 >= min){
+      if(active==='btc'){ setStatus(true,'Payment received ✅ Unlocking…'); unlock(); }
+      window.__btcPaid = true;
+    } else if(active==='btc') setStatus(false,'Transaction seen, below minimum — top it up?');
+  }catch(e){ if(active==='btc') setStatus(false,'Reconnecting to Bitcoin chain…'); }
+}
+
+async function checkEth(){
+  try{
+    const body = JSON.stringify({jsonrpc:'2.0',method:'eth_getBalance',params:[ETH,'latest'],id:1});
+    const r = await fetch('https://ethereum-rpc.publicnode.com',{method:'POST',headers:{'Content-Type':'application/json'},body});
+    const j = await r.json();
+    const bal = parseInt(j.result,16)/1e18; // ETH
+    const price = await getEthPriceUsd();
+    const usd = bal*price;
+    // baseline at load so we only count NEW incoming value
+    if(window.__ethBase===undefined) window.__ethBase = bal;
+    const delta = bal - window.__ethBase;
+    const min = (ethTarget? (USD_MIN/ (await getEthPriceUsd())) : 0.0003);
+    if(delta >= min){
+      if(active==='eth'){ setStatus(true,'Payment received ✅ Unlocking…'); unlock(); }
+      window.__ethPaid = true;
+    } else if(active==='eth') setStatus(false, `Watching the Ethereum chain… (balance ${bal.toFixed(5)} ETH)`);
+  }catch(e){ if(active==='eth') setStatus(false,'Reconnecting to Ethereum chain…'); }
 }
 
 function setStatus(ok, text){
-  document.getElementById('dot').className = 'dot' + (ok?' ok':'');
+  document.getElementById('dot').className = 'dot'+(ok?' ok':'');
   document.getElementById('statusText').textContent = text;
 }
-function unlock(){
-  document.getElementById('download').style.display='block';
+function unlock(){ document.getElementById('download').style.display='block'; }
+
+// tabs
+function showTab(t){
+  active=t;
+  document.getElementById('btcPane').style.display = t==='btc'?'block':'none';
+  document.getElementById('ethPane').style.display = t==='eth'?'block':'none';
+  document.getElementById('tabBtc').style.background = t==='btc'?'var(--brand)':'transparent';
+  document.getElementById('tabBtc').style.color = t==='btc'?'#1a1207':'var(--muted)';
+  document.getElementById('tabEth').style.background = t==='eth'?'var(--brand)':'transparent';
+  document.getElementById('tabEth').style.color = t==='eth'?'#1a1207':'var(--muted)';
+  const a = t==='btc'?BTC:ETH;
+  // copy button targets active address
+  window.__activeAddr = a;
+  buildQR(t==='btc'?('bitcoin:'+BTC):('ethereum:'+ETH));
+  setStatus(false, t==='btc'?'Waiting for Bitcoin payment…':'Waiting for Ethereum payment…');
 }
+document.getElementById('tabBtc').onclick = ()=>showTab('btc');
+document.getElementById('tabEth').onclick = ()=>showTab('eth');
 
 document.getElementById('copyBtn').onclick = ()=>{
-  navigator.clipboard.writeText(ADDRESS);
+  navigator.clipboard.writeText(window.__activeAddr||BTC);
   const b=document.getElementById('copyBtn'); b.textContent='Copied ✓'; setTimeout(()=>b.textContent='Copy address',1500);
 };
 
-// load QR lib (qrcode-generator) then init
 (function loadQR(){
   const s=document.createElement('script');
   s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
-  s.onload=()=>{ buildQR(ADDRESS); };
+  s.onload=()=>{ showTab('btc'); };
   s.onerror=()=>{ document.getElementById('qr').innerHTML='<div style="color:#333;font-size:11px;padding:6px;text-align:center">Scan the<br>address<br>below</div>'; };
   document.head.appendChild(s);
 })();
 
-refreshPrice().then(()=>{ buildQRonce(); });
-function buildQRonce(){ if(window.qrcode) buildQR(ADDRESS); }
-
-// poll
 refreshPrice();
 setInterval(refreshPrice, 60000);
-checkPayment();
-setInterval(checkPayment, 15000);
+checkBtc(); checkEth();
+setInterval(checkBtc, 15000);
+setInterval(checkEth, 15000);
 </script>
 </body>
 </html>
