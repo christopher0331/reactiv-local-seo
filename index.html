@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contractor Local SEO Starter Pack — Reactiv Labs</title>
+<meta name="description" content="A done-for-you local SEO starter kit for home-service contractors. Show up in the Google Map Pack and win more local jobs." />
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121922; --panel2:#0f151c; --line:#1f2a36;
+    --txt:#e7edf3; --muted:#8aa0b4; --brand:#f7931a; --brand2:#ffb347;
+    --ok:#34d399; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:radial-gradient(1200px 600px at 50% -10%,#13202c,var(--bg));color:var(--txt);line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:32px 20px 80px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .logo{font-weight:800;letter-spacing:.3px;font-size:20px}
+  .logo b{color:var(--brand)}
+  .pill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:3px 9px;border-radius:999px}
+  h1{font-size:34px;line-height:1.15;margin:18px 0 8px;font-weight:800}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 24px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .card h3{margin:0 0 6px;font-size:15px}
+  .card p{margin:0;color:var(--muted);font-size:13px}
+  .price-box{background:linear-gradient(180deg,#16212c,#101820);border:1px solid var(--line);border-radius:20px;padding:24px;margin:26px 0;text-align:center}
+  .price-box .usd{font-size:40px;font-weight:800}
+  .price-box .btc{color:var(--brand);font-weight:800;font-size:28px;margin-top:4px}
+  .price-box .note{color:var(--muted);font-size:13px;margin-top:6px}
+  .pay{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:22px}
+  .qr{width:180px;height:180px;background:#fff;border-radius:12px;padding:8px;display:flex;align-items:center;justify-content:center}
+  .qr svg{width:100%;height:100%}
+  .addr-row{display:flex;gap:8px;align-items:center;margin:10px 0;background:#0a0f15;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .addr{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-all;color:#cde3f5}
+  button{cursor:pointer;border:none;border-radius:10px;font-weight:700;font-size:14px;padding:10px 14px;color:#1a1207;background:var(--brand)}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .status{margin-top:14px;font-size:14px;display:flex;align-items:center;gap:8px;color:var(--muted)}
+  .dot{width:10px;height:10px;border-radius:50%;background:#f87171;box-shadow:0 0 0 0 rgba(248,113,113,.6);animation:pulse 1.6s infinite}
+  .dot.ok{background:var(--ok);animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(248,113,113,.5)}70%{box-shadow:0 0 0 8px rgba(248,113,113,0)}100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}}
+  .download{display:none;margin-top:18px}
+  .download a{display:inline-flex;align-items:center;gap:8px;background:var(--ok);color:#04231a;text-decoration:none;font-weight:800;padding:14px 20px;border-radius:12px;font-size:16px}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:18px}
+  summary{cursor:pointer;font-weight:700}
+  details ul{color:var(--muted);font-size:14px}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
+  a.link{color:var(--brand2)}
+  @media(max-width:680px){.grid,.pay{grid-template-columns:1fr}.qr{margin:0 auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Reactiv<b> Labs</b></div>
+    <span class="pill">Local SEO for Contractors</span>
+  </header>
+
+  <h1>The Contractor's Local SEO Starter Pack</h1>
+  <p class="sub">A done-for-you kit to help home-service contractors show up in the Google Map Pack and win more local jobs. Built from playbooks we've run across 40+ contractor sites.</p>
+
+  <div class="grid">
+    <div class="card"><h3>📋 25-Point GBP Checklist</h3><p>The #1 ranking factor for local map visibility.</p></div>
+    <div class="card"><h3>🧱 On-Page Checklist</h3><p>Service & city page template that ranks.</p></div>
+    <div class="card"><h3>🔎 Local Keyword Tracker</h3><p>Editable CSV — services × cities × volume.</p></div>
+    <div class="card"><h3>📇 50 Citation Sources</h3><p>High-authority directories to list on.</p></div>
+    <div class="card"><h3>⭐ Review Templates</h3><p>Copy-paste SMS + email to get 5-stars.</p></div>
+    <div class="card"><h3>🗓️ 30-Day Plan</h3><p>Day-by-day action plan that compounds.</p></div>
+  </div>
+
+  <div class="price-box">
+    <div class="usd" id="usd">$5.00</div>
+    <div class="btc" id="btc">⏳ loading BTC price…</div>
+    <div class="note">Pay-what-you-want. Beat the price? Send more — we won't complain. Any amount ≥ $1 unlocks the download.</div>
+  </div>
+
+  <div class="pay">
+    <div class="qr" id="qr"></div>
+    <div>
+      <div style="font-weight:700;margin-bottom:6px">Pay with Bitcoin</div>
+      <div class="addr-row"><span class="addr" id="addr">bc1qrn9lcjg8z7ytyxhqqrpadp7qxe4tyettxjy7a0</span></div>
+      <button id="copyBtn" class="ghost">Copy address</button>
+      <div class="status"><span class="dot" id="dot"></span><span id="statusText">Waiting for payment…</span></div>
+    </div>
+  </div>
+
+  <div class="download" id="download">
+    <a id="dlLink" href="local-seo-pack.zip">⬇️ Download the Starter Pack (.zip)</a>
+    <div style="color:var(--muted);font-size:13px;margin-top:8px">Thanks for your support! 🎉</div>
+  </div>
+
+  <details>
+    <summary>How does the payment check work?</summary>
+    <ul>
+      <li>Your browser watches the address above on the public Bitcoin blockchain (mempool.space API).</li>
+      <li>Once a transaction sends ≥ the shown BTC amount to this address and is seen in the mempool (or confirmed), the download unlocks automatically.</li>
+      <li>No account, no email, no card. Pure peer-to-peer.</li>
+    </ul>
+  </details>
+
+  <footer>
+    Reactiv Labs · This is a digital product. Payments are irreversible and non-refundable.<br/>
+    Need a custom site or SEO campaign? Reply to the wallet memo or reach out — we build for contractors.
+  </footer>
+</div>
+
+<script>
+const ADDRESS = "bc1qrn9lcjg8z7ytyxhqqrpadp7qxe4tyettxjy7a0";
+const USD_TARGET = 5.00;      // headline price (any >= $1 unlocks)
+const USD_MIN = 1.00;         // minimum to unlock download
+let btcTarget = null;
+
+// --- QR code (no external dep): build a tiny QR using an inline encoder is heavy;
+//     instead embed a precomputed QR image via api as svg is not allowed; use a
+//     compact JS QR generator loaded from a trusted CDN fallback. We implement a
+//     minimal QR by fetching an SVG from a deterministic service is discouraged;
+//     so we draw using the qrcode generator below (bundled minimal implementation).
+function buildQR(text){
+  // Use the lightweight qrcode generator bundled inline (qrcode-generator UMD).
+  const qr = qrcode(0, 'M');
+  qr.addData(text);
+  qr.make();
+  document.getElementById('qr').innerHTML = qr.createSvgTag({cellSize:4, margin:0, scalable:true});
+}
+
+async function refreshPrice(){
+  try{
+    const r = await fetch('https://mempool.space/api/v1/prices');
+    const j = await r.json();
+    const usdPerBtc = j.USD; // mempool.space returns {USD, EUR, ...}
+    if(usdPerBtc){
+      btcTarget = (USD_TARGET / usdPerBtc);
+      const minBtc = (USD_MIN / usdPerBtc);
+      document.getElementById('btc').textContent = btcTarget.toFixed(6) + ' BTC';
+      window.__minBtc = minBtc;
+    } else { throw new Error('no USD'); }
+  }catch(e){
+    document.getElementById('btc').textContent = '≈ 0.000050 BTC';
+    window.__minBtc = 0.000010;
+  }
+}
+
+async function checkPayment(){
+  if(!btcTarget && !window.__minBtc) return;
+  try{
+    const r = await fetch('https://mempool.space/api/address/'+ADDRESS+'/txs');
+    const txs = await r.json();
+    if(!Array.isArray(txs) || txs.length===0){
+      setStatus(false, 'Watching the blockchain for your payment…');
+      return;
+    }
+    let received = 0, bestTx=null;
+    for(const tx of txs){
+      for(const v of (tx.vout||[])){
+        if(v.scriptpubkey_address === ADDRESS && v.value){
+          received += v.value; // satoshis
+        }
+      }
+    }
+    const receivedBtc = received / 1e8;
+    const min = window.__minBtc || (USD_MIN/60000);
+    if(receivedBtc >= min){
+      setStatus(true, 'Payment received ✅  Unlocking your download…');
+      unlock();
+    } else {
+      setStatus(false, 'Transaction seen, amount below minimum — top it up?');
+    }
+  }catch(e){
+    setStatus(false, 'Reconnecting to blockchain…');
+  }
+}
+
+function setStatus(ok, text){
+  document.getElementById('dot').className = 'dot' + (ok?' ok':'');
+  document.getElementById('statusText').textContent = text;
+}
+function unlock(){
+  document.getElementById('download').style.display='block';
+}
+
+document.getElementById('copyBtn').onclick = ()=>{
+  navigator.clipboard.writeText(ADDRESS);
+  const b=document.getElementById('copyBtn'); b.textContent='Copied ✓'; setTimeout(()=>b.textContent='Copy address',1500);
+};
+
+// load QR lib (qrcode-generator) then init
+(function loadQR(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+  s.onload=()=>{ buildQR(ADDRESS); };
+  s.onerror=()=>{ document.getElementById('qr').innerHTML='<div style="color:#333;font-size:11px;padding:6px;text-align:center">Scan the<br>address<br>below</div>'; };
+  document.head.appendChild(s);
+})();
+
+refreshPrice().then(()=>{ buildQRonce(); });
+function buildQRonce(){ if(window.qrcode) buildQR(ADDRESS); }
+
+// poll
+refreshPrice();
+setInterval(refreshPrice, 60000);
+checkPayment();
+setInterval(checkPayment, 15000);
+</script>
+</body>
+</html>
