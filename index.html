@@ -147,10 +147,10 @@ async function refreshPrice(){
 
 async function getEthPriceUsd(){
   try{
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {headers:{'User-Agent':'reactiv-store/1.0'}});
     const j = await r.json();
-    return j.ethereum.usd || 3000;
-  }catch(e){ return 3000; }
+    return j.ethereum.usd || 1900;
+  }catch(e){ return 1900; }
 }
 
 async function checkBtc(){
@@ -179,7 +179,7 @@ async function checkEth(){
     // baseline at load so we only count NEW incoming value
     if(window.__ethBase===undefined) window.__ethBase = bal;
     const delta = bal - window.__ethBase;
-    const min = (ethTarget? (USD_MIN/ (await getEthPriceUsd())) : 0.0003);
+    const min = (ethTarget? (USD_MIN/ (await getEthPriceUsd())) : (USD_MIN/1900));
     if(delta >= min){
       if(active==='eth'){ setStatus(true,'Payment received ✅ Unlocking…'); unlock(); }
       window.__ethPaid = true;
